@@ -1,0 +1,105 @@
+// Lib
+const express = require('express');
+const mysqldb = require('mysql');
+
+ 
+
+
+const app = express();
+const PORT = 8080;
+
+ 
+
+// MySQL database connection
+const dbSetup = {
+    host: 'localhost',
+    user: 'root',
+    database: 'mygames',
+    password: 'root'
+}
+
+ 
+
+mysqldb.createConnection(dbSetup, (err, connection) => {;
+    
+
+// Connect to the database
+//dbSetup.connect((err) => {
+    if (err) {
+        console.error('Failed to connect to the database', err);
+        return;
+    }
+    //console.log('Connected to database');
+});
+
+
+ 
+
+ 
+
+app.use(express.json())
+
+ 
+
+app.get('/games', async (req, res) => {
+    try{
+        const dbSetup = await dbSetup.getConnection(dbSetup);
+        const result = await dbSetup.execute('SELECT * FROM games');
+        const games = result.rows;
+        res.status(200).json(games);
+} catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve games' });
+}
+});
+
+ 
+
+app.post('/games/:id', async (req, res) => {
+
+ 
+
+    const { id } = req.params;
+    const { game } = req.body;
+    const { star } = req.body;
+    const { comment } = req.body;
+
+ 
+
+    if (!game) {
+        res.status(418).send({ message: 'Need a game!'})
+    }
+
+ 
+
+    if (!star){
+        res.status(418).send({ message: 'Need a star!'})
+    }
+
+ 
+
+    if (typeof star !== 'number' || star < 0 && star > 5) { // change this line later chatgpt
+        res.status(418).send({ error: 'Need a value between 0 - 5'})
+    }
+
+ 
+
+    try {
+        const connection = await mysqldb.getConnection(dbSetup);
+        await connection.execute(
+            'INSERT INTO game (gameid, game, gamestar) VALUES (:id, :game, :star)', [id, game, star]
+        )
+        await connection.execute('commit')
+        res.status(201).json({gameid, game, avgrating});
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add game'});
+    }
+});
+
+ 
+
+app.listen(
+    PORT,
+    () => console.log(`bepp bop i am the server i am running on http://localhost:${PORT}`)
+
+    
+)
